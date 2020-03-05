@@ -1,0 +1,71 @@
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal"
+		aria-label="Close" ng-click="close()">
+		<span aria-hidden="true"></span>
+	</button>
+	<h4 class="modal-title">{{title}}</h4>
+</div>
+<div class="modal-body">
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;季节</span> <input type="text"
+					class="form-control" ng-model="planTarget.season" id="season">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;品类</span>
+				<input type="text" class="form-control" ng-model="planTarget.category">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;下单属性</span>
+				<input type="text"	 class="form-control" ng-model="planTarget.styleBill">
+<!--				<select class="form-control" ng-model="planTarget.styleBill" ng-options="v.name as v.type for v in $parent.styleBills">-->
+<!--				</select>-->
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;计划年月</span> <input type="text"
+					class="form-control" ng-model="planTarget.planMonth" id="planMonth">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;计划数量</span> <input type="text"
+					class="form-control" ng-model="planTarget.planNums">
+			</div>
+		</div>
+		<br />
+	</div>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default pull-left"
+		data-dismiss="modal" ng-click="close()">{{'COMMON.CANCEL'|translate}}</button>
+	<button type="button" class="btn btn-primary" ng-click="ok()">{{'COMMON.OK'|translate}}</button>
+</div>
+
+<script>
+    $(function() {
+		$("#planMonth").datepicker({
+			dateFormat : "yy-mm",
+		    changeMonth: true,
+		    changeYear: true
+		});
+	});
+</script>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.DayReturnB2BDao">
+    <select id="getViewDayReturnB2BList" resultType="org.cboard.dto.ViewDayReturnB2B">
+       SELECT s.id,s.date,s.caustomer,s.date,s.sku,s.qty,s.amount,k.brand,k.lylx as platform
+       from tb_day_return_b2b s
+       inner join kh_brand k on s.caustomer=k.khmc
+       where 1=1
+       <if test="month!=null">
+       	and date_format(s.`date`,'%Y%m')=#{month}
+       </if>
+       <if test="caustomer!=null">
+       	and k.khmc=#{caustomer}
+       </if>
+       <if test="date!=null">
+       	and s.date=#{date}
+       </if>
+       <if test="sku!=null">
+       	and s.sku=#{sku}
+       </if>
+       order by s.date,k.brand,k.lylx,s.caustomer
+    </select>
+
+    <insert id="save" parameterType="org.cboard.pojo.DayReturnB2B">
+        <![CDATA[
+        INSERT INTO tb_day_return_b2b(date,caustomer,sku,qty,amount) 
+        VALUES (#{date},#{caustomer},#{sku},#{qty},#{amount})
+        ]]>
+    </insert>
+
+    <update id="update" parameterType="org.cboard.pojo.DayReturnB2B">
+        UPDATE tb_day_return_b2b 
+        <set> 
+          <if test="date!=null">date=#{date},</if>
+          <if test="caustomer!=null">caustomer=#{caustomer},</if>
+          <if test="sku!=null">sku=#{sku},</if>
+          <if test="qty!=null">qty=#{qty},</if>
+          <if test="amount!=null and amount != '' ">amount=#{amount},</if>
+         </set>
+         where id = #{id}
+    </update>
+
+    <delete id="delete">
+    	<![CDATA[
+        	delete from tb_day_return_b2b where id = #{0}
+       	]]>
+    </delete>
+    
+    <select id="getDayReturnB2B" resultType="org.cboard.pojo.DayReturnB2B">
+    	<![CDATA[
+	    	SELECT id,date,caustomer,sku,qty,amount from tb_day_return_b2b 
+	    	where id=#{0}
+    	]]>
+    </select>
+    <select id="getViewDayReturnB2B" resultType="org.cboard.dto.ViewDayReturnB2B">
+       SELECT s.id,s.date,s.caustomer,s.date,s.sku,s.qty,s.amount,k.brand,k.lylx as platform
+       from tb_day_return_b2b s
+       inner join kh_brand k on s.caustomer=k.khmc
+       where id=#{id}
+    </select>
+    
+    <select id="getSkuCount" resultType="java.lang.Integer">
+    	select count(*) as cnt from goods_sku
+    	where sku=#{sku}
+    </select>
+    <!--  <select id="getHistoryTargetObjects" resultType="String">
+    	<![CDATA[
+	    	SELECT distinct object from tb_day_sales_target 
+	    	where dimension=#{0} and object is not null
+    	]]>
+    </select>-->
+</mapper>

@@ -1,0 +1,16 @@
+ <div class="form-inline" style="padding:0 8px;" >
+	 <div class="form-group">
+	    <label style="font-size:12px;">{{param.name}}</label>
+	    <input type="text" class="datepicker form-control" ng-model="param.textvalue" style="font-size:12px;"/>
+	  </div>
+</div>
+
+<script>
+    $(function() {
+		$(".datepicker").datepicker({
+			dateFormat : "yy-mm-dd",
+		    changeMonth: true,
+		    changeYear: true
+		});
+	});
+</script>

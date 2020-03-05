@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.PlanTargetDao">
+    <select id="getPlanTargetList" resultType="org.cboard.pojo.PlanTarget">
+       SELECT id,season,category,plan_month as planMonth,style_bill as styleBill,plan_nums as planNums,create_date as createDate,modified_date as modifiedDate from tb_plan_target
+       where 1=1
+       <if test="planMonth!=null">
+       	and plan_month=#{planMonth}
+       </if>
+       <if test="season!=null">
+       	and season=#{season}
+       </if>
+        <if test="styleBill!=null">
+            and style_bill=#{styleBill}
+        </if>
+       <if test="category!=null">
+       	and category like CONCAT('%',#{category},'%')
+       </if>
+       order by id
+    </select>
+
+    <insert id="save" parameterType="org.cboard.pojo.PlanTarget">
+        <![CDATA[
+        INSERT INTO tb_plan_target(season,category,plan_month,style_bill,plan_nums,create_date)
+        VALUES (#{season},#{category},#{planMonth},#{styleBill},#{planNums},#{createDate})
+        ]]>
+    </insert>
+
+    <update id="update" parameterType="org.cboard.pojo.PlanTarget">
+        UPDATE tb_plan_target
+        <set> 
+          <if test="season!=null">season=#{season},</if>
+          <if test="category!=null">category=#{category},</if>
+          <if test="planMonth!=null">plan_month=#{planMonth},</if>
+            <if test="styleBill!=null">style_bill=#{styleBill},</if>
+          <if test="planNums!=null">plan_nums=#{planNums},</if>
+         </set>
+         where id = #{id}
+    </update>
+
+    <delete id="delete">
+    	<![CDATA[
+        	delete from tb_plan_target where id = #{0}
+       	]]>
+    </delete>
+    
+    <select id="getPlanTarget" resultType="org.cboard.pojo.PlanTarget">
+    	<![CDATA[
+	    	SELECT id,season,category,plan_month as planMonth,style_bill as styleBill,plan_nums as planNums,create_date as createDate,modified_date as modifiedDate from tb_plan_target
+	    	where id=#{0}
+    	]]>
+    </select>
+    
+    <!--  <select id="getHistoryTargetObjects" resultType="String">
+    	<![CDATA[
+	    	SELECT distinct object from tb_day_sales_target 
+	    	where dimension=#{0} and object is not null
+    	]]>
+    </select>-->
+</mapper>

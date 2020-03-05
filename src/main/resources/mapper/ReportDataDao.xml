@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.ReportDataDao">
+    
+    <select id="getReportJsonData" resultType="java.util.Map">
+    	SELECT
+			*
+		FROM
+			report_json_data
+		WHERE
+			1 = 1
+		<if test="is_valid != null">
+		AND is_valid = ${is_valid}
+		</if>
+		<if test="report_name != null">
+		AND report_name = #{report_name}
+		</if>
+		ORDER BY
+			id ASC
+    </select>
+    
+    <select id="getReportJsonDataByDetail" resultType="java.util.Map">
+    	SELECT
+			*
+		FROM
+			report_json_data
+		WHERE
+			1 = 1
+		<if test="is_valid != null">
+		AND is_valid = ${is_valid}
+		</if>
+		<if test="report_name != null">
+		AND report_name = #{report_name}
+		</if>
+		<if test="report_name_brand != null">
+		AND report_name = #{report_name_brand}
+		</if>
+		ORDER BY
+			id ASC
+    </select>
+    
+    <insert id="insertReportJsonData" parameterType="java.util.Map">
+    	INSERT INTO report_json_data(report_json,report_name,report_name_brand,report_criterion,is_valid,up_date)
+		VALUES
+			(
+				#{report_json},#{report_name},#{report_name_brand},#{report_criterion},${is_valid},#{up_date}
+			)
+    </insert>
+    
+    <update id="updateReportJsonData" parameterType="java.util.Map">
+        <![CDATA[
+        UPDATE report_json_data
+           SET report_json = #{report_json},
+               up_date = #{up_date}
+         WHERE id = #{id}
+        ]]>
+    </update>
+    
+    <delete id="deleteReportJsonData" parameterType="java.util.Map">
+    	DELETE
+		FROM
+			report_json_data
+		WHERE
+			report_name_brand = #{report_name_brand}
+    </delete>
+    
+    <select id="queryEmailData" resultType="java.util.Map">
+    	SELECT
+			*
+		FROM
+			email_data
+		WHERE
+			1 = 1
+		<if test="is_valid!=null">
+		AND is_valid = #{is_valid}
+		</if>
+		ORDER BY
+			id ASC 	
+    </select>
+    
+    <select id="getDailyReport" resultType="java.util.LinkedHashMap">
+		SELECT
+			b.date,
+			ifnull(
+				format(sum(b.cashback_target), 0),
+				0
+			) AS cashback_target,
+			ifnull(
+				format(sum(t.noto2o - t.tnoto2o), 0),
+				0
+			) AS cashback_noto2o,
+			concat(
+				ifnull(
+					CASE
+					WHEN sum(b.cashback_target) &gt; 0 THEN
+						format(
+							sum(t.noto2o - t.tnoto2o) / sum(b.cashback_target) * 100,
+							1
+						)
+					WHEN sum(b.cashback_target) &lt; 0 THEN
+						format(
+							(
+								2 - sum(t.noto2o - t.tnoto2o) / sum(b.cashback_target)
+							) * 100,
+							1
+						)
+					ELSE
+						0
+					END,
+					0
+				),
+				'%'
+			) AS cashback_finish_rate,
+			concat(
+				ifnull(
+					format(
+						sum(
+							t.sale_price - t.tc_return_payment
+						) / sum(
+							t.market_payment - t.tc_market_price
+						) * 100,
+						1
+					),
+					0
+				),
+				'%'
+			) AS discount_rate,
+			ifnull(
+				format(sum(b.sales_target), 0),
+				0
+			) AS sales_target,
+			ifnull(
+				format(sum(t.actual_payment), 0),
+				0
+			) AS book_sales_amount,
+			concat(
+				ifnull(
+					format(
+						sum(t.actual_payment) / sum(b.sales_target) * 100,
+						1
+					),
+					0
+				),
+				'%'
+			) AS finish_rate,
+			ifnull(
+				format(sum(b.refund_target), 0),
+				0
+			) AS refund_target,
+			ifnull(
+				format(sum(t.to2o + t.tnoto2o), 0),
+				0
+			) AS actual_to2o,
+			ifnull(format(sum(t.o2o), 0), 0) AS o2o,
+			ifnull(format(sum(t.to2o), 0), 0) AS to2o,
+			concat(
+				ifnull(
+					CASE
+					WHEN (
+						sum(t.sale_price) - sum(t.tc_return_payment)
+					) &gt; 0 THEN
+						format(
+							sum(t.o2o - t.to2o) / (
+								sum(t.sale_price) - sum(t.tc_return_payment)
+							) * 100,
+							1
+						)
+					WHEN (
+						sum(t.sale_price) - sum(t.tc_return_payment)
+					) &lt; 0 THEN
+						format(
+							(
+								2 - sum(t.o2o - t.to2o) / (
+									sum(t.sale_price) - sum(t.tc_return_payment)
+								)
+							) * 100,
+							1
+						)
+					ELSE
+						0
+					END,
+					0
+				),
+				'%'
+			) AS o2o_rate
+		FROM
+			(
+				SELECT
+					brand,
+					order_time,
+					sum(sale_price) AS sale_price,
+					sum(market_payment) AS market_payment,
+					sum(actual_payment) AS actual_payment,
+					sum(noto2o) AS noto2o,
+					sum(o2o) AS o2o,
+					sum(tc_return_payment) AS tc_return_payment,
+					sum(tc_market_price) AS tc_market_price,
+					sum(tnoto2o) AS tnoto2o,
+					sum(to2o) AS to2o
+				FROM
+					(
+						SELECT
+							brand,
+							order_time,
+							sum(sale_price) AS sale_price,
+							sum(market_payment) AS market_payment,
+							sum(actual_payment) AS actual_payment,
+							sum(
+								CASE
+								WHEN send_goods_type != 'O2O门店' THEN
+									sale_price
+								ELSE
+									0
+								END
+							) AS 'noto2o',
+							sum(
+								CASE
+								WHEN send_goods_type = 'O2O门店' THEN
+									sale_price
+								ELSE
+									0
+								END
+							) AS 'o2o',
+							0 AS tc_return_payment,
+							0 AS tc_market_price,
+							0 AS tnoto2o,
+							0 AS to2o
+						FROM
+							moxbi.tb_order_daily
+						WHERE
+							1 = 1
+						<if test="brand!=null">
+							AND brand = #{brand}
+						</if>
+						<if test="btime!=null">
+							AND order_time &gt;= #{btime}
+						</if>
+						<if test="etime!=null">
+							AND order_time &lt;= #{etime}
+						</if>
+						GROUP BY
+							brand,
+							order_time
+						UNION ALL
+							SELECT
+								tc_brand AS brand,
+								tc_return_time AS order_time,
+								0,
+								0,
+								0,
+								0,
+								0,
+								sum(tc_return_payment) AS tc_return_payment,
+								sum(tc_market_price) AS tc_market_price,
+								sum(
+									CASE
+									WHEN tc_return_type != 'O2O门店' THEN
+										tc_return_payment
+									ELSE
+										0
+									END
+								) AS 'tnoto2o',
+								sum(
+									CASE
+									WHEN tc_return_type = 'O2O门店' THEN
+										tc_return_payment
+									ELSE
+										0
+									END
+								) AS 'to2o'
+							FROM
+								moxbi.tb_return_daily
+							WHERE
+								1 = 1
+							<if test="brand!=null">
+								AND tc_brand = #{brand}
+							</if>
+							<if test="btime!=null">
+								AND tc_return_time &gt;= #{btime}
+							</if>
+							<if test="etime!=null">
+								AND tc_return_time &lt;= #{etime}
+							</if>
+							GROUP BY
+								tc_brand,
+								tc_return_time
+					) t1
+				GROUP BY
+					t1.brand,
+					t1.order_time
+			) t
+		RIGHT JOIN (
+			SELECT
+				a.brand AS brand,
+				a.date AS date,
+				sum(a.cashback_target) AS cashback_target,
+				sum(a.sales_target) AS sales_target,
+				sum(a.book_sales_amount) AS book_sales_amount,
+				sum(a.refund_target) AS refund_target
+			FROM
+				cboard.tb_day_sales_target a
+			LEFT JOIN moxbi.kh_brand b ON a.brand = b.brand
+			AND a.store = b.khmc
+			WHERE
+				b.xzdm = 3
+			GROUP BY
+				a.brand,
+				a.date
+		) b ON t.brand = b.brand
+		AND t.order_time = b.date
+		WHERE
+			1 = 1
+		<if test="brand!=null">
+			AND b.brand = #{brand}
+		</if>
+		<if test="btime!=null">
+			AND b.date &gt;= #{btime}
+		</if>
+		<if test="etime!=null">
+			AND b.date &lt;= #{etime}
+		</if>
+		GROUP BY
+			b.date
+		UNION ALL
+			/*MTD汇总*/
+			SELECT
+				'MTD',
+				ifnull(
+					format(sum(b.cashback_target), 0),
+					0
+				) AS cashback_target,
+				ifnull(
+					format(sum(t.noto2o - t.tnoto2o), 0),
+					0
+				) AS cashback_noto2o,
+				concat(
+					ifnull(
+						CASE
+						WHEN sum(b.cashback_target) &gt; 0 THEN
+							format(
+								sum(t.noto2o - t.tnoto2o) / sum(b.cashback_target) * 100,
+								1
+							)
+						WHEN sum(b.cashback_target) &lt; 0 THEN
+							format(
+								(
+									2 - sum(t.noto2o - t.tnoto2o) / sum(b.cashback_target)
+								) * 100,
+								1
+							)
+						ELSE
+							0
+						END,
+						0
+					),
+					'%'
+				) AS cashback_finish_rate,
+				concat(
+					ifnull(
+						format(
+							sum(
+								t.sale_price - t.tc_return_payment
+							) / sum(
+								t.market_payment - t.tc_market_price
+							) * 100,
+							1
+						),
+						0
+					),
+					'%'
+				) AS discount_rate,
+				ifnull(
+					format(sum(b.sales_target), 0),
+					0
+				) AS sales_target,
+				ifnull(
+					format(sum(t.actual_payment), 0),
+					0
+				) AS book_sales_amount,
+				concat(
+					ifnull(
+						format(
+							sum(t.actual_payment) / sum(b.sales_target) * 100,
+							1
+						),
+						0
+					),
+					'%'
+				) AS finish_rate,
+				ifnull(
+					format(sum(b.refund_target), 0),
+					0
+				) AS refund_target,
+				ifnull(
+					format(sum(t.to2o + t.tnoto2o), 0),
+					0
+				) AS actual_to2o,
+				ifnull(format(sum(t.o2o), 0), 0) AS o2o,
+				ifnull(format(sum(t.to2o), 0), 0) AS to2o,
+				concat(
+					ifnull(
+						CASE
+						WHEN (
+							sum(t.sale_price) - sum(t.tc_return_payment)
+						) &gt; 0 THEN
+							format(
+								sum(t.o2o - t.to2o) / (
+									sum(t.sale_price) - sum(t.tc_return_payment)
+								) * 100,
+								1
+							)
+						WHEN (
+							sum(t.sale_price) - sum(t.tc_return_payment)
+						) &lt; 0 THEN
+							format(
+								(
+									2 - sum(t.o2o - t.to2o) / (
+										sum(t.sale_price) - sum(t.tc_return_payment)
+									)
+								) * 100,
+								1
+							)
+						ELSE
+							0
+						END,
+						0
+					),
+					'%'
+				) AS o2o_rate
+			FROM
+				(
+					SELECT
+						brand,
+						order_time,
+						sum(sale_price) AS sale_price,
+						sum(market_payment) AS market_payment,
+						sum(actual_payment) AS actual_payment,
+						sum(noto2o) AS noto2o,
+						sum(o2o) AS o2o,
+						sum(tc_return_payment) AS tc_return_payment,
+						sum(tc_market_price) AS tc_market_price,
+						sum(tnoto2o) AS tnoto2o,
+						sum(to2o) AS to2o
+					FROM
+						(
+							SELECT
+								brand,
+								order_time,
+								sum(sale_price) AS sale_price,
+								sum(market_payment) AS market_payment,
+								sum(actual_payment) AS actual_payment,
+								sum(
+									CASE
+									WHEN send_goods_type != 'O2O门店' THEN
+										sale_price
+									ELSE
+										0
+									END
+								) AS 'noto2o',
+								sum(
+									CASE
+									WHEN send_goods_type = 'O2O门店' THEN
+										sale_price
+									ELSE
+										0
+									END
+								) AS 'o2o',
+								0 AS tc_return_payment,
+								0 AS tc_market_price,
+								0 AS tnoto2o,
+								0 AS to2o
+							FROM
+								moxbi.tb_order_daily
+							WHERE
+								order_time &lt; CURDATE() 
+							<if test="brand!=null">
+								AND brand = #{brand}
+							</if>
+							<if test="btime!=null">
+								AND order_time &gt;= #{btime}
+							</if>	
+							GROUP BY
+								brand,
+								order_time
+							UNION ALL
+								SELECT
+									tc_brand AS brand,
+									tc_return_time AS order_time,
+									0,
+									0,
+									0,
+									0,
+									0,
+									sum(tc_return_payment) AS tc_return_payment,
+									sum(tc_market_price) AS tc_market_price,
+									sum(
+										CASE
+										WHEN tc_return_type != 'O2O门店' THEN
+											tc_return_payment
+										ELSE
+											0
+										END
+									) AS 'tnoto2o',
+									sum(
+										CASE
+										WHEN tc_return_type = 'O2O门店' THEN
+											tc_return_payment
+										ELSE
+											0
+										END
+									) AS 'to2o'
+								FROM
+									moxbi.tb_return_daily
+								WHERE
+									tc_return_time &lt; CURDATE()
+								<if test="brand!=null">
+									AND tc_brand = #{brand}
+								</if>
+								<if test="btime!=null">
+									AND tc_return_time &gt;= #{btime}
+								</if>
+								GROUP BY
+									tc_brand,
+									tc_return_time
+						) t1
+					GROUP BY
+						t1.brand,
+						t1.order_time
+				) t
+			RIGHT JOIN (
+				SELECT
+					a.brand AS brand,
+					a.date AS date,
+					sum(a.cashback_target) AS cashback_target,
+					sum(a.sales_target) AS sales_target,
+					sum(a.book_sales_amount) AS book_sales_amount,
+					sum(a.refund_target) AS refund_target
+				FROM
+					cboard.tb_day_sales_target a
+				LEFT JOIN moxbi.kh_brand b ON a.brand = b.brand
+				AND a.store = b.khmc
+				WHERE
+					b.xzdm = 3
+				GROUP BY
+					a.brand,
+					a.date
+			) b ON t.brand = b.brand
+			AND t.order_time = b.date
+			WHERE
+				b.date &lt; CURDATE()
+			<if test="brand!=null">
+				AND b.brand = #{brand}
+			</if>
+			<if test="btime!=null">
+				AND b.date &gt;= #{btime}
+			</if>	
+    </select>
+    
+</mapper>

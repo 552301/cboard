@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.SalesTargetDao">
+
+    <select id="getSalesTargetList" resultType="org.cboard.pojo.SalesTarget">
+       SELECT id,year,month,dimension,object,target_payment,target_num from salestarget
+       order by year,month,dimension,object
+    </select>
+    
+    <select id="getSalesTargetListYear" resultType="org.cboard.pojo.SalesTarget">
+       SELECT id,year,month,dimension,object,target_payment,target_num from salestarget
+       where year=#{0}
+       order by year,month,dimension,object
+    </select>
+    
+    <select id="getSalesTargetListYearDimension" resultType="org.cboard.pojo.SalesTarget">
+    	select a.`id`.`year`,a.`month`a.object,b.target_payment,b.target_num
+		from (
+		select `id`,`year`,`month`,object from 
+		cboard.salestarget
+		where `year`=#{0} dimension=#{1} ) a
+		left join (
+		select `year`,`month`,object,target_payment,target_num from 
+		cboard.salestarget
+		where `year`=#{0} dimension=#{1} 
+		)  b on a.`year`=b.`year` and a.`month`=b.`month` and a.object=b.object 
+    </select>
+
+    <insert id="save" parameterType="org.cboard.pojo.SalesTarget">
+        <![CDATA[
+        INSERT INTO salestarget(year,month,dimension,object,target_payment,target_num) 
+        VALUES (#{year},#{month},#{dimension},#{object},#{target_payment},#{target_num})
+        ]]>
+    </insert>
+
+    <update id="update" parameterType="org.cboard.pojo.SalesTarget">
+        <![CDATA[
+        UPDATE salestarget SET year=#{year},month=#{month},dimension=#{dimension},
+        object=#{object},target_payment=#{target_payment},target_num=#{target_num}
+         where id = #{id}
+        ]]>
+    </update>
+
+    <delete id="delete">
+    	<![CDATA[
+        	delete from SalesTarget where id = #{0}
+       	]]>
+    </delete>
+    
+    <select id="getSalesTarget" resultType="org.cboard.pojo.SalesTarget">
+    	<![CDATA[
+	    	SELECT id,year,month,dimension,object,target_payment,target_num from salestarget 
+	    	where id=#{0}
+    	]]>
+    </select>
+    
+    <select id="getHistoryTargetObjects" resultType="String">
+    	<![CDATA[
+	    	SELECT distinct object from salestarget 
+	    	where dimension=#{0} and object is not null
+    	]]>
+    </select>
+</mapper>

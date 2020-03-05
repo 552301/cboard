@@ -1,0 +1,96 @@
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal"
+		aria-label="Close" ng-click="close()">
+		<span aria-hidden="true"></span>
+	</button>
+	<h4 class="modal-title">{{title}}</h4>
+</div>
+<div class="modal-body">
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;日期</span> <input type="text"
+					class="form-control" ng-model="target.date" id="targetDate">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;平台</span> <input type="text"
+					class="form-control" ng-model="target.platform">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;品牌</span> <input type="text"
+					class="form-control" ng-model="target.brand">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;店铺</span> <input type="text"
+					class="form-control" ng-model="target.store">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">回款目标</span> <input type="text"
+					class="form-control" ng-model="target.cashbackTarget">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">销售目标</span> <input type="text"
+					class="form-control" ng-model="target.salesTarget">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">退款目标</span> <input type="text"
+					class="form-control" ng-model="target.refundTarget">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">账面销售</span> <input type="text"
+					class="form-control" ng-model="target.bookSalesAmount">
+			</div>
+		</div>
+		<br />
+	</div>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default pull-left"
+		data-dismiss="modal" ng-click="close()">{{'COMMON.CANCEL'|translate}}</button>
+	<button type="button" class="btn btn-primary" ng-click="ok()">{{'COMMON.OK'|translate}}</button>
+</div>
+
+<script>
+    $(function() {
+		$("#targetDate").datepicker({
+			dateFormat : "yy-mm-dd",
+		    changeMonth: true,
+		    changeYear: true
+		});
+	});
+</script>

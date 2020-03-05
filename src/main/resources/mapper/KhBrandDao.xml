@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.KhBrandDao">
+    <select id="getKhBrandByKhmc" resultType="org.cboard.pojo.KhBrand">
+       select khdm,khmc,brand,lylx,xzdm
+       from kh_brand
+       where khmc=#{khmc}
+       limit 1
+    </select>
+    <select id="getKhBrandByLylx" resultType="org.cboard.pojo.KhBrand">
+       select khdm,khmc,brand,lylx,xzdm
+       from kh_brand
+       where lylx=#{lylx}
+       limit 1
+    </select>
+</mapper>

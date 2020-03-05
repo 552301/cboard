@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.BIPlanTargetDao">
+	<select id="getBIPlanTargetList"
+		resultType="org.cboard.pojo.BIPlanTarget">
+		SELECT
+		a.style_bill AS styleBill,
+		a.plan_month AS planMonth,
+		c.nums AS finishNums,
+		d.sell_nums AS sellNums,
+		a.plan_nums AS planNums,
+		ROUND(c.nums / a.plan_nums, 4) * 100 AS finishRate
+		FROM
+		tb_plan_target a
+		LEFT JOIN (
+		SELECT
+		c.yearMonth,
+		c.style_bill,
+		sum(c.nums) AS nums
+		FROM
+		BI_STYLE_PLAN_TARGET c FORCE INDEX(`style_bill`)
+		GROUP BY
+		c.yearMonth,
+		c.style_bill
+		) c ON
+		a.style_bill = c.style_bill
+		AND a.plan_month = c.yearMonth
+		LEFT JOIN (
+		SELECT
+		c.yearMonth,
+		c.style_bill,
+		sum(a.sell_nums) as sell_nums
+		FROM
+		BI_STYLE_PLAN_TARGET c  FORCE INDEX(`style_bill`)
+		LEFT JOIN BI_STYLE_SELL a on
+		a.style_class = c.style_dl
+		and a.style_month = c.style_month
+		and a.style_year = c.style_year
+		GROUP BY
+		c.yearMonth,
+		c.style_bill
+		) d on a.style_bill = d.style_bill
+		AND a.plan_month = d.yearMonth
+		WHERE
+		(
+		a.style_bill IS NOT NULL
+		AND a.style_bill != ''
+		)
+		<if test="planMonth!=null">
+			and a.plan_month=#{planMonth}
+		</if>
+		<if test="styleBill!=null">
+			and a.style_bill=#{styleBill}
+		</if>
+		GROUP BY a.style_bill,a.plan_month
+	</select>
+
+	<select id="getBICategoryPlanTargetList"
+		resultType="org.cboard.pojo.BICategoryPlanTarget">
+		SELECT
+		c.style_dl AS styleCategory,
+		c.yearMonth AS planMonth,
+		c.nums AS finishNums,
+		d.sell_nums AS sellNums,
+		a.plan_nums AS planNums,
+		ROUND(c.nums / a.plan_nums,4) * 100 AS planRate
+		FROM
+		(
+		SELECT
+		c.yearMonth,
+		c.style_bill,
+		c.style_dl,
+		sum(c.nums) AS nums
+		FROM
+		BI_STYLE_PLAN_TARGET c FORCE INDEX(`style_bill`)
+		GROUP BY
+		c.yearMonth,c.style_dl,
+		c.style_bill
+		) c
+		LEFT JOIN (
+		SELECT
+		c.yearMonth,
+		c.style_bill,
+		c.style_dl,
+		sum(a.sell_nums) as sell_nums
+		FROM
+		BI_STYLE_PLAN_TARGET c  FORCE INDEX(`style_bill`)
+		LEFT JOIN BI_STYLE_SELL a on
+		a.style_class = c.style_dl
+		and a.style_month = c.style_month
+		and a.style_year = c.style_year
+		GROUP BY
+		c.yearMonth,
+		c.style_bill
+		) d on c.style_bill = d.style_bill
+		AND c.yearMonth = d.yearMonth and c.style_dl=d.style_dl
+		LEFT JOIN tb_plan_target a ON a.style_bill = c.style_bill
+		AND a.plan_month = c.yearMonth and a.category=c.style_dl
+		WHERE
+		(
+		c.style_bill IS NOT NULL
+		AND c.style_bill != ''
+		)
+		<if test="styleBill!=null">
+			and c.style_bill=#{styleBill}
+		</if>
+		<if test="planMonth!=null">
+			and c.yearMonth=#{planMonth}
+		</if>
+		GROUP BY
+		c.style_dl,c.yearMonth
+	</select>
+</mapper>

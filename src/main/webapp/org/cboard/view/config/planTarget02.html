@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="cn">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- jqGrid组件基础样式包-必要 -->
+    <link rel="stylesheet" href="/plugins/jqgrid/css/ui.jqgrid.css" />
+
+    <!-- jqGrid主题包-非必要 -->
+    <!-- 在jqgrid/css/css这个目录下还有其他的主题包，可以尝试更换看效果 -->
+    <!--    <link rel="stylesheet" href="/plugins/jqgrid/css/css/redmond/jquery-ui-1.8.16.custom.css" />-->
+
+    <!-- jqGrid插件包-必要 -->
+    <script type="text/javascript" src="/plugins/jqgrid/js/jquery.jqGrid.src.js"></script>
+
+    <!-- jqGrid插件的多语言包-非必要 -->
+    <!-- 在jqgrid/js/i18n下还有其他的多语言包，可以尝试更换看效果 -->
+    <script type="text/javascript" src="/plugins/jqgrid/js/i18n/grid.locale-cn.js"></script>
+    <title>MSSHE产能计划目标</title>
+
+    <!-- 本页面初始化用到的js包，创建jqGrid的代码就在里面 -->
+    <script type="text/javascript">
+        $(function(){
+            // $("#importDialog").hide();
+            // $("#importDialog").dialog({autoOpen: false, modal: true, width: 400, height: 160});
+            $("#searchPlanMonth").datepicker({
+                dateFormat : "yy-mm",
+                changeMonth: true,
+                changeYear: true
+            });
+            //页面加载完成之后执行
+            pageInit();
+        });
+        function pageInit(){
+            $("#importDialog").dialog({autoOpen: false, modal: true, width: 400, height: 160});
+            // $("#importDialog").removeAttr("style");
+            // $("#importDialog").attr("style","display:none");
+            // $("#importDialog").dialog("close");
+            var season = document.getElementById('searchSeason').value;
+            var category = document.getElementById('searchCategory').value;
+            var planMonth = document.getElementById('searchPlanMonth').value==undefined || document.getElementById('searchPlanMonth').value=="" ?document.getElementById('searchPlanMonth').value:new Date(document.getElementById('searchPlanMonth').value).Format('yyyy-MM');
+
+            var postData = {"params": angular.toJson({"season": season,"category": category,"planMonth": planMonth})};
+            //创建jqGrid组件
+            jQuery("#list2").jqGrid(
+                {
+                    url : '/plantarget/getPlanTargetList.do',//组件创建完成之后请求数据的url
+                    datatype : "json",//请求数据返回的类型。可选json,xml,txt
+                    colNames : [ '编号','季节', '品类', '计划年月', '计划数', '创建时间','修改时间'],//jqGrid的列显示名字
+                    colModel : [ //jqGrid每一列的配置信息。包括名字，索引，宽度,对齐方式.....
+                        {name : 'id',index : 'id',width : 55,hide:true},
+                        {name : 'season',index : 'season',width : 90, searchoptions:{sopt:['eq','ne','le','lt','gt','ge']}},
+                        {name : 'category',index : 'category',width : 100, searchoptions:{sopt:['eq','ne','le','lt','gt','ge']}},
+                        {name : 'planMonth',index : 'planMonth',width : 80,align : "right", searchoptions:{sopt:['eq','ne','le','lt','gt','ge']}},
+                        {name : 'planNums',index : 'planNums',width : 80,align : "right"},
+                        {name : 'createDate',index : 'createDate',width : 80,align : "right"},
+                        {name : 'modifiedDate',index : 'modifiedDate',width : 150,sortable : false}
+                    ],
+                    rowNum : 20,//一页显示多少条
+                    rowList : [ 20, 40, 100 ],//可供用户选择一页显示多少条
+                    pager : '#pager2',//表格页脚的占位符(一般是div)的id
+                    sortname : 'id',//初始化的时候排序的字段
+                    sortorder : "desc",//排序方式,可选desc,asc
+                    mtype : "post",//向后台请求数据的ajax的类型。可选post,get
+                    autowidth:true,
+                    height:'90%',
+                    postData:postData,
+                    viewrecords : true,
+                    caption : "MSSHE产能计划目标"//表格的标题名字
+                });
+            /*创建jqGrid的操作按钮容器*/
+            /*可以控制界面上增删改查的按钮是否显示*/
+            jQuery("#list2").jqGrid('navGrid', '#pager2', {edit : false,search:false,add : false,del : false});
+            // jQuery("#list2").jqGrid('filterToolbar',{searchOperators : true});
+        }
+        $scope = this;
+        $scope.planTargets = [];
+        $scope.search = function(){
+            var season = document.getElementById('searchSeason').value;
+            var category = document.getElementById('searchCategory').value;
+            var planMonth = document.getElementById('searchPlanMonth').value==undefined || document.getElementById('searchPlanMonth').value=="" ?document.getElementById('searchPlanMonth').value:new Date(document.getElementById('searchPlanMonth').value).Format('yyyy-MM');
+
+            var postData = {"params": angular.toJson({"season": season,"category": category,"planMonth": planMonth})};
+            jQuery("#list2").jqGrid('setGridParam', {
+                url : "/plantarget/getPlanTargetList.do",
+                postData:postData,
+                rows:20,
+                page : 1
+            }).trigger("reloadGrid");
+        }
+
+        $scope.search();
+
+        function imports(){
+            $("#importDialog" ).dialog('open');
+        };
+
+        $scope.imports();
+
+        var idTmr;
+        function  getExplorer() {
+            var explorer = window.navigator.userAgent ;
+            //ie
+            if (explorer.indexOf("MSIE") >= 0) {
+                return 'ie';
+            }
+            //firefox
+            else if (explorer.indexOf("Firefox") >= 0) {
+                return 'Firefox';
+            }
+            //Chrome
+            else if(explorer.indexOf("Chrome") >= 0){
+                return 'Chrome';
+            }
+            //Opera
+            else if(explorer.indexOf("Opera") >= 0){
+                return 'Opera';
+            }
+            //Safari
+            else if(explorer.indexOf("Safari") >= 0){
+                return 'Safari';
+            }
+        }
+
+        function exportTable(tableid) {//整个表格拷贝到EXCEL中
+
+            var filename = 'MSSHE产能计划目标' +  Date.now() + '.xls';
+            if(getExplorer()=='ie')
+            {
+                var curTbl = document.getElementById(tableid);
+                var oXL = new ActiveXObject("Excel.Application");
+
+                //创建AX对象excel
+                var oWB = oXL.Workbooks.Add();
+                //获取workbook对象
+                var xlsheet = oWB.Worksheets(1);
+                //激活当前sheet
+                var sel = document.body.createTextRange();
+                sel.moveToElementText(curTbl);
+                //把表格中的内容移到TextRange中
+                sel.select();
+                //全选TextRange中内容
+                sel.execCommand("Copy");
+                //复制TextRange中内容
+                xlsheet.Paste();
+                //粘贴到活动的EXCEL中
+                oXL.Visible = true;
+                //设置excel可见属性
+
+                try {
+                    var fname = oXL.Application.GetSaveAsFilename(filename, "Excel Spreadsheets (*.xls), *.xls");
+                } catch (e) {
+                    print("Nested catch caught " + e);
+                } finally {
+                    oWB.SaveAs(fname);
+
+                    oWB.Close(savechanges = false);
+                    //xls.visible = false;
+                    oXL.Quit();
+                    oXL = null;
+                    //结束excel进程，退出完成
+                    //window.setInterval("Cleanup();",1);
+                    idTmr = window.setInterval("Cleanup();", 1);
+
+                }
+
+            }
+            else
+            {
+                tableToExcel(tableid, filename);
+            }
+        }
+
+        var tableToExcel = (function() {
+            var uri = 'data:application/vnd.ms-excel;base64,',
+                template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>',
+                base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) },
+                format = function(s, c) {
+                    return s.replace(/{(\w+)}/g,
+                        function(m, p) { return c[p]; })
+                }
+            return function(table, name) {
+                if (!table.nodeType)
+                    table = document.getElementById(table)
+
+                var ctx = {worksheet: 'sheet1' || 'Worksheet', table: table.innerHTML.replace('全选','id').replaceAll('<input id="','').replaceAll('" class="checkbox-id" type="checkbox">','')}
+                document.getElementById('exportTable').href = uri + base64(format(template, ctx));
+                document.getElementById("exportTable").download = name;
+                document.getElementById("exportTable").click();
+            }
+        })();
+    </script>
+</head>
+<body>
+<div class="content-header">
+    <h1>MSSHE产能计划目标</h1>
+</div>
+<div class="box">
+    <div class="box-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-inline">
+                    <div class="form-group" style="margin:0 5px;">
+                        <label for="seasonTextor">季节</label>
+                        <input type="text" class="form-control" ng-model="searchSeason" id="searchSeason" />
+                    </div>
+                    <div class="form-group" style="margin:0 5px;">
+                        <label for="categoryTextor">品类</label>
+                        <input type="text" class="form-control" ng-model="searchCategory" id="searchCategory" />
+                    </div>
+                    <div class="form-group" style="margin:0 5px;">
+                        <label for="planMonthTextor">年月</label>
+                        <input type="text" class="form-control" ng-model="searchPlanMonth" id="searchPlanMonth" />
+                    </div>
+                    <button type="button" class="btn btn-default" style="margin:0 5px;" onclick="search();">查询</button>
+                    <button type="button" class="btn btn-default" style="margin:0 5px;" onclick="imports();">从Excel导入</button>
+                    <button type="button" class="btn btn-default" style="margin:0 5px;" onclick="exportTable('list2');">导出为Excel</button>
+                    <a id="exportTable" style="display: none;"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<table id="list2"></table>
+<div id="pager2"></div>
+<!--class="form-group"-->
+<div  id="importDialog" title="导入MSSHE产能计划目标" ng-hide="false" style="padding-top: 10px;display:none">
+    <form name="serForm" action="/cboard/planTarget/importPlanTargets.do" target="hideFrame" method="post"  enctype="multipart/form-data">
+        <input type="file" id="importFile" name="file">
+        <p class="help-block">*请使用<a href="/cboard/templates/plan_target_template.xlsx"><u>模板</u></a>录入数据并上传.</p>
+        <input type="button" onclick="importTargets();" value="上传" />
+    </form>
+</div>
+<script type="text/javascript">
+
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<div class="content-header">
+    <h1>MSSHE产能计划与目标报表</h1>
+</div>
+<div class="box">
+    <div class="box-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-inline">
+                    <div class="form-group" style="margin:0 5px;">
+                        <label for="styleBillTextor">下单属性</label>
+                        <select id="selStyleBill" class="monthSelector form-control" ng-model="selStyleBill" id="selStyleBill">
+                            <option ></option>
+                            <option >针织类</option>
+                            <option >梭织类</option>
+                            <option >毛织类</option>
+                            <option >牛仔类</option>
+                            <option >真丝类</option>
+                            <option >外采类</option>
+                            <option >羽绒类</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0 5px;">
+                        <label for="planMonthTextor">年月</label>
+                        <input type="text" class="form-control" ng-model="searchPlanMonth" id="searchPlanMonth" />
+                    </div>
+                    <button type="button" class="btn btn-default" style="margin:0 5px;" ng-click="search();">查询</button>
+<!--                    <button type="button" class="btn btn-default" style="margin:0 5px;" ng-click="imports();">从Excel导入</button>-->
+                    <button type="button" class="btn btn-default" style="margin:0 5px;" ng-click="exportTable('gview_list2');">导出为Excel</button>
+                    <a id="exportTable" style="display: none;"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<table id="list2"></table>
+<div id="pager2"></div>
+<!--class="form-group"-->
+<div  id="importDialog" title="导入报表" ng-hide="false" style="padding-top: 10px;display:none">
+    <form name="serForm" action="/cboard/planTarget/importPlanTargets.do" target="hideFrame" method="post"  enctype="multipart/form-data">
+        <input type="file" id="importFile" name="file">
+        <p class="help-block">*请使用<a href="/cboard/templates/plan_target_template.xlsx"><u>模板</u></a>录入数据并上传.</p>
+        <input type="button" onclick="importTargets();" value="上传" />
+    </form>
+</div>
+<iframe name="hideFrame" frameborder="0" height="0"></iframe>
+<script type="text/javascript">
+    $(function(){
+
+        $("#searchPlanMonth").datepicker({
+            dateFormat : "yy-mm",
+            changeMonth: true,
+            defaultDate: +7,
+            changeYear: true
+        });
+
+        // $( "#searchPlanMonth" ).datepicker( 'setDate' , new Date());
+        //页面加载完成之后执行
+        pageInit();
+    });
+    function pageInit(){
+        $("#importDialog").dialog({autoOpen: false, modal: true, width: 400, height: 160});
+
+        var styleBill = document.getElementById('selStyleBill').value;
+        var planMonth = document.getElementById('searchPlanMonth').value==undefined || document.getElementById('searchPlanMonth').value=="" ?document.getElementById('searchPlanMonth').value:new Date(document.getElementById('searchPlanMonth').value).Format('yyyy-MM');
+
+        var postData = {"params": angular.toJson({"styleBill": styleBill,"planMonth": planMonth})};
+        //创建jqGrid组件
+        jQuery("#list2").jqGrid(
+            {
+                url : 'biplantarget/getBIPlanTargetList.do',//组件创建完成之后请求数据的url
+                datatype : "json",//请求数据返回的类型。可选json,xml,txt
+                colNames : [ '下单属性', '计划年月', '计划数量(目标)','实际完成数量(下单)', '销售数量','计划完成率'],//jqGrid的列显示名字
+                colModel : [ //jqGrid每一列的配置信息。包括名字，索引，宽度,对齐方式.....
+                    {name : 'styleBill',index : 'styleBill',width : 55},
+                    {name : 'planMonth',index : 'planMonth',width : 70},
+                    {name : 'planNums',index : 'planNums',width : 70,summaryType:'sum'},
+                    {name : 'finishNums',index : 'finishNums',width : 70,summaryType:'sum'},
+                    {name : 'sellNums',index : 'sellNums',width : 70},
+                    {name : 'finishRate',index : 'finishRate',width : 70,formatter:currencyFmatter,summaryType:'avg'}
+                ],
+                rowNum : 100,//一页显示多少条
+                rowList : [ 100, 200, 400 ],//可供用户选择一页显示多少条
+                pager : '#pager2',//表格页脚的占位符(一般是div)的id
+                sortname : 'planMonth',//初始化的时候排序的字段
+                sortorder : "desc",//排序方式,可选desc,asc
+                mtype : "get",//向后台请求数据的ajax的类型。可选post,get
+                autowidth:true,
+                grouping:true,
+                groupingView : {
+                  groupField : ['planMonth'],
+                  groupColumnShow : [true],
+                  groupText : ['<b>{0} - 计划完成(目标) :{planNums}  -  实际完成(下单) :  {finishNums}</b>'],
+                  groupCollapse : true,
+               groupOrder: ['desc']       
+                },
+                height:'90%',
+                postData:postData,
+                viewrecords : true,
+                subGrid: true,
+                caption : "MSSHE产能计划与目标报表",//表格的标题名字
+                subGridRowExpanded: function(subgrid_id, row_id) {
+                    var subgrid_table_id, pager_id,styleBill,planMonth;
+                    subgrid_table_id = subgrid_id+"_t";
+                    pager_id = "p_"+subgrid_table_id;
+                    if (row_id) {
+                        var ret = jQuery("#list2").jqGrid('getRowData', row_id);
+                        styleBill = ret.styleBill;
+                        planMonth = ret.planMonth;
+                    }
+                    $("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table><div id='"+pager_id+"' class='scroll'></div>");
+                    jQuery("#"+subgrid_table_id).jqGrid({
+                        url:"biplantarget/getBICategoryPlanTargetList.do",//?styleBill=" + styleBill +"&planMonth="+planMonth,
+                        datatype: "json",
+                        postData:{
+                            styleBill:styleBill,
+                            planMonth:planMonth
+                        },
+                        mtype : "post",//向后台请求数据的ajax的类型。可选post,get
+                        colNames: ['品类','计划年月','计划数量(目标)','完成数量(下单)','计划完成率','销售数量'],
+                        colModel: [
+                            {name:"styleCategory",index:"styleCategory",width:80},
+                            {name:"planMonth",index:"planMonth",width:130},
+                            {name:"planNums",index:"planNums",width:70,align:"right"},
+                            {name:"finishNums",index:"finishNums",width:70,align:"right"},
+                            {name:"planRate",index:"planRate",width:70,align:"right",formatter:currencyFmatter},
+                            {name:"sellNums",index:"sellNums",width:70,align:"right"}
+                        ],
+                        rowNum:20,
+                        pager: pager_id,
+                        sortname: 'styleCategory',
+                        sortorder: "asc",
+                        autowidth:true,
+                        height: '100%'
+                    });
+                    jQuery("#"+subgrid_table_id).jqGrid('navGrid',"#"+pager_id,{edit:false,search:false,add:false,del:false})
+                }
+            });
+        /*创建jqGrid的操作按钮容器*/
+        /*可以控制界面上增删改查的按钮是否显示*/
+        jQuery("#list2").jqGrid('navGrid', '#pager2', {edit : false,search:false,add : false,del : false});
+        // jQuery("#list2").jqGrid('filterToolbar',{searchOperators : true});
+    }
+
+    function currencyFmatter (cellvalue, options, rowObject){
+        if(isNaN(cellvalue)  || cellvalue == undefined || cellvalue == '')
+            return '0%';
+        else
+            return cellvalue + '%';
+    }
+
+</script>

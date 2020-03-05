@@ -1,0 +1,65 @@
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal"
+		aria-label="Close" ng-click="close()">
+		<span aria-hidden="true"></span>
+	</button>
+	<h4 class="modal-title">{{title}}</h4>
+</div>
+<div class="modal-body">
+	    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon">年份</span>
+                <select class="form-control yearSelector" ng-model="rate.year" >
+					<option ng-repeat="year in years" value="{{year}}" on-finish-render>{{year}}</option>
+				</select>
+            </div>
+        </div>
+        <br/>
+    </div>
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon">月份</span>
+				<select class="form-control monthSelector" ng-model="rate.month" >
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+					<option value="11">11</option>
+					<option value="12">12</option>
+				</select>
+            </div>
+        </div>
+        <br/>
+    </div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">客户</span> <input type="text"
+					class="form-control" ng-model="rate.caustomer">
+			</div>
+		</div>
+		<br />
+	</div>
+	<div class="row" style="margin-bottom: 10px">
+		<div class="col-md-12 form-horizontal">
+			<div class="input-group">
+				<span class="input-group-addon">汇率</span> <input type="text"
+					class="form-control" ng-model="rate.rate">
+			</div>
+		</div>
+		<br />
+	</div>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default pull-left"
+		data-dismiss="modal" ng-click="close()">{{'COMMON.CANCEL'|translate}}</button>
+	<button type="button" class="btn btn-primary" ng-click="ok()">{{'COMMON.OK'|translate}}</button>
+</div>

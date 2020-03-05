@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.DaySalesTargetDao">
+    <select id="getDaySalesTargetList" resultType="org.cboard.pojo.DaySalesTarget">
+       SELECT id,date,brand,platform,store,sales_target salesTarget,refund_target refundTarget,book_sales_amount bookSalesAmount,cashback_target cashbackTarget from tb_day_sales_target
+       where 1=1
+       <if test="month!=null">
+       	and date_format(`date`,'%Y%m')=#{month}
+       </if>
+       <if test="platform!=null">
+       	and platform=#{platform}
+       </if>
+       <if test="brand!=null">
+       	and brand=#{brand}
+       </if>
+       <if test="store!=null">
+       	and store=#{store}
+       </if>
+       <if test="date!=null">
+       	and date=#{date}
+       </if>
+       order by date,brand,platform,store
+    </select>
+
+    <insert id="save" parameterType="org.cboard.pojo.DaySalesTarget">
+        <![CDATA[
+        INSERT INTO tb_day_sales_target(date,brand,platform,store,sales_target,refund_target,book_sales_amount,cashback_target) 
+        VALUES (#{date},#{brand},#{platform},#{store},#{salesTarget},#{refundTarget},#{bookSalesAmount},#{cashbackTarget})
+        ]]>
+    </insert>
+
+    <update id="update" parameterType="org.cboard.pojo.DaySalesTarget">
+        UPDATE tb_day_sales_target 
+        <set> 
+          <if test="date!=null">date=#{date},</if>
+          <if test="brand!=null">brand=#{brand},</if>
+          <if test="platform!=null">platform=#{platform},</if>
+          <if test="store!=null">store=#{store},</if>
+          <if test="salesTarget!=null and salesTarget != ''">sales_target=#{salesTarget},</if>
+          <if test="refundTarget!=null and refundTarget != '' ">refund_target=#{refundTarget},</if>
+          <if test="bookSalesAmount!=null and bookSalesAmount!=''">book_sales_amount=#{bookSalesAmount},</if>
+          <if test="cashbackTarget!=null and cashbackTarget!=''">cashback_target=#{cashbackTarget},</if>
+         </set>
+         where id = #{id}
+    </update>
+
+    <delete id="delete">
+    	<![CDATA[
+        	delete from tb_day_sales_target where id = #{0}
+       	]]>
+    </delete>
+    
+    <select id="getDaySalesTarget" resultType="org.cboard.pojo.DaySalesTarget">
+    	<![CDATA[
+	    	SELECT id,date,brand,platform,store,sales_target salesTarget,refund_target refundTarget,book_sales_amount bookSalesAmount,cashback_target cashbackTarget from tb_day_sales_target 
+	    	where id=#{0}
+    	]]>
+    </select>
+    
+    <!--  <select id="getHistoryTargetObjects" resultType="String">
+    	<![CDATA[
+	    	SELECT distinct object from tb_day_sales_target 
+	    	where dimension=#{0} and object is not null
+    	]]>
+    </select>-->
+</mapper>

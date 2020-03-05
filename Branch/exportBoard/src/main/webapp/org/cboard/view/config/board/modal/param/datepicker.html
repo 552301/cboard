@@ -1,0 +1,45 @@
+<div class="row form-horizontal" style="margin-bottom: 10px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label class="col-sm-4 control-label">{{'CONFIG.DASHBOARD.PARAM_TYPE'|translate}}</label>
+            <div class="col-sm-8">
+                <select class="form-control" ng-model="param.paramType" ng-options="d.value as d.name for d in param_types"></select>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label class="col-sm-4 control-label-compact">{{'CONFIG.DASHBOARD.WIDTH'|translate}}</label>
+            <div class="col-sm-8">
+                <input type="text" ng-model="param.cfg.width" class="form-control" placeholder="1-12">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label class="col-sm-4 control-label-compact">{{'CONFIG.DASHBOARD.VIEW_FORMMAT'|translate}}</label>
+            <div class="col-sm-8">
+                <div class="input-group">
+                    <input type="text" ng-model="param.cfg.formatter" class="form-control">
+                    <div class="input-group-btn">
+                        <button type="button" class="btn dropdown-toggle" data-toggle="dropdown">
+                            <span class="fa fa-caret-down"></span></button>
+                        <ul class="dropdown-menu">
+                            <li ng-click="param.cfg.formatter='yyyy-MM-dd HH:mm:ss'"><a>yyyy-MM-dd HH:mm:ss</a></li>
+                            <li ng-click="param.cfg.formatter='yyyy-MM-dd'"><a>yyyy-MM-dd</a></li>
+                            <li ng-click="param.cfg.formatter='yyyy-MM'"><a>yyyy-MM</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+       <div class="form-group">
+           <label class="col-sm-4 control-label">过滤类型</label>
+           <div class="col-sm-8">
+               <select class="form-control" ng-model="param.cfg.filterType" ng-options="t as t for t in type" ng-change="filterType()" />
+           </div>
+       </div>
+    </div>
+</div>

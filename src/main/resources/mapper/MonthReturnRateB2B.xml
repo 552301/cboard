@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.MonthReturnRateB2BDao">
+    <select id="getMonthReturnRateB2BList" resultType="org.cboard.pojo.MonthReturnRateB2B">
+       select id,year,month,caustomer,rate
+       from tb_month_return_rate_b2b
+       where 1=1
+       <if test="year!=null">
+       	and year = #{year}
+       </if>
+       <if test="month!=null">
+       	and month=#{month}
+       </if>
+       <if test="caustomer!=null">
+       	and caustomer=#{caustomer}
+       </if>
+       order by year,month,caustomer
+    </select>
+
+    <insert id="save" parameterType="org.cboard.pojo.MonthReturnRateB2B">
+        <![CDATA[
+        INSERT INTO tb_month_return_rate_b2b(year,month,caustomer,rate) 
+        VALUES (#{year},#{month},#{caustomer},#{rate})
+        ]]>
+    </insert>
+
+    <update id="update" parameterType="org.cboard.pojo.MonthReturnRateB2B">
+        UPDATE tb_month_return_rate_b2b 
+        <set> 
+          <if test="year!=null">year=#{year},</if>
+          <if test="month!=null">month=#{month},</if>
+          <if test="caustomer!=null">caustomer=#{caustomer},</if>
+          <if test="rate!=null">rate=#{rate},</if>
+         </set>
+         where id = #{id}
+    </update>
+
+    <delete id="delete">
+    	<![CDATA[
+        	delete from tb_month_return_rate_b2b where id = #{0}
+       	]]>
+    </delete>
+    
+    <select id="getMonthReturnRateB2B" resultType="org.cboard.pojo.MonthReturnRateB2B">
+    	<![CDATA[
+	    	SELECT id,year,month,caustomer,rate from tb_month_return_rate_b2b 
+	    	where id=#{0}
+    	]]>
+    </select>
+</mapper>

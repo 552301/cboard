@@ -1,0 +1,85 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="close()">
+        <span aria-hidden="true"></span></button>
+    <h4 class="modal-title">{{title}}</h4>
+</div>
+<div class="modal-body">
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon">年份</span>
+                <select class="form-control yearSelector" ng-model="target.year" >
+					<option ng-repeat="year in years" value="{{year}}" on-finish-render>{{year}}</option>
+				</select>
+            </div>
+        </div>
+        <br/>
+    </div>
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon">月份</span>
+				<select class="form-control monthSelector" ng-model="target.month" >
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+					<option value="11">11</option>
+					<option value="12">12</option>
+				</select>
+            </div>
+        </div>
+        <br/>
+    </div>
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon">维度</span>
+                <select class="form-control" id="dimensionSelector" ng-model="target.dimension" ng-change="dimensionChange()" >
+					<option value="品牌">品牌</option>
+					<option value="平台">平台</option>
+					<option value="店铺">店铺</option>
+				</select>
+            </div>
+        </div>
+        <br/>
+    </div>
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon" required >对象</span>
+                <select class="form-control" id="objectSelector" ng-model="target.object" ng-options="o for o in targetObjects">
+                </select>
+            </div>
+        </div>
+        <br/>
+    </div>
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon">销售额(万)</span>
+                <input type="text" class="form-control" ng-model="target.target_payment">
+            </div>
+        </div>
+        <br/>
+    </div>
+    <div class="row" style="margin-bottom: 10px">
+        <div class="col-md-12 form-horizontal">
+            <div class="input-group">
+                <span class="input-group-addon">销售量</span>
+                <input type="text" class="form-control" ng-model="target.target_num">
+            </div>
+        </div>
+        <br/>
+    </div>
+ </div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default pull-left" data-dismiss="modal" ng-click="close()">{{'COMMON.CANCEL'|translate}}</button>
+    <button type="button" class="btn btn-primary" ng-click="ok()">{{'COMMON.OK'|translate}}</button>
+</div>

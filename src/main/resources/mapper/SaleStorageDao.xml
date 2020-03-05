@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.cboard.dao.SaleStorageDao">
+    <select id="getViewSaleStorageList" resultType="org.cboard.dto.ViewSaleStorage">
+       SELECT s.id,s.date,s.sku
+       from tb_sale_storage s
+       where 1=1
+       <if test="month!=null">
+       	and date_format(s.`date`,'%Y%m')=#{month}
+       </if>
+       <if test="date!=null">
+       	and s.date=#{date}
+       </if>
+       <if test="sku!=null">
+       	and s.sku=#{sku}
+       </if>
+       order by s.date
+    </select>
+
+    <insert id="save" parameterType="org.cboard.pojo.SaleStorage">
+        <![CDATA[
+        INSERT INTO tb_sale_storage(date,sku) 
+        VALUES (#{date},#{sku})
+        ]]>
+    </insert>
+
+    <update id="update" parameterType="org.cboard.pojo.SaleStorage">
+        UPDATE tb_sale_storage
+        <set> 
+          <if test="date!=null">date=#{date},</if>
+          <if test="sku!=null">sku=#{sku},</if>
+         </set>
+         where id = #{id}
+    </update>
+    <delete id="delete">
+    	<![CDATA[
+        	delete from tb_sale_storage where id = #{0}
+       	]]>
+    </delete>
+    
+    <select id="getSaleStorage" resultType="org.cboard.pojo.SaleStorage">
+    	<![CDATA[
+	    	SELECT id,date,sku, from tb_sale_storage 
+	    	where id=#{0}
+    	]]>
+    </select>
+    
+    <select id="getViewSaleStorage" resultType="org.cboard.dto.ViewSaleStorage">
+       SELECT s.id,s.date,s.sku
+       from tb_sale_storage s
+       where s.id=#{0}
+    </select>
+   	<select id="getSkuCount" resultType="java.lang.Integer">
+    	select count(*) as cnt from goods_sku
+    	where sku=#{sku}
+    </select>
+    <!--  <select id="getHistoryTargetObjects" resultType="String">
+    	<![CDATA[
+	    	SELECT distinct object from tb_day_sales_target 
+	    	where dimension=#{0} and object is not null
+    	]]>
+    </select>-->
+</mapper>
