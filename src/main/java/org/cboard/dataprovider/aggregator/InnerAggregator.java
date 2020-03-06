@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import org.cboard.cache.CacheManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Map;
 
@@ -12,7 +14,7 @@ import java.util.Map;
  */
 public abstract class InnerAggregator implements Aggregatable {
 
-	protected Map<String, String> dataSource;
+    protected Map<String, String> dataSource;
     protected Map<String, String> query;
 
 //    @Autowired

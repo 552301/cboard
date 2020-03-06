@@ -12,24 +12,33 @@ import org.cboard.dataprovider.config.ConfigComponent;
 import org.cboard.dataprovider.config.DimensionConfig;
 import org.cboard.dataprovider.expression.NowFunction;
 import org.cboard.dataprovider.result.AggregateResult;
-import org.cboard.dto.InjectionParam;
+import org.cboard.pojo.DashboardRole;
+import org.cboard.services.AuthenticationService;
+import org.cboard.services.RoleService;
 import org.cboard.util.NaturalOrderComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by zyong on 2017/1/9.
  */
 public abstract class DataProvider {
 
+    @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
+    private RoleService roleService;
     private InnerAggregator innerAggregator;
     protected Map<String, String> dataSource;
     protected Map<String, String> query;
     private int resultLimit;
+    private boolean isUsedForTest = false;
     private long interval = 12 * 60 * 60; // second
 
     public static final String NULL_STRING = "#NULL";
@@ -41,6 +50,13 @@ public abstract class DataProvider {
 
     public abstract boolean doAggregationInDataSource();
 
+    public boolean isDataSourceAggInstance() {
+        if (this instanceof Aggregatable && doAggregationInDataSource()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     /**
      * get the aggregated data by user's widget designer
      *
@@ -48,7 +64,7 @@ public abstract class DataProvider {
      */
     public final AggregateResult getAggData(AggConfig ac, boolean reload) throws Exception {
         evalValueExpression(ac);
-        if (this instanceof Aggregatable && doAggregationInDataSource()) {
+        if (isDataSourceAggInstance()) {
             return ((Aggregatable) this).queryAggData(ac);
         } else {
             checkAndLoad(reload);
@@ -58,7 +74,7 @@ public abstract class DataProvider {
 
     public final String getViewAggDataQuery(AggConfig config) throws Exception {
         evalValueExpression(config);
-        if (this instanceof Aggregatable && doAggregationInDataSource()) {
+        if (isDataSourceAggInstance()) {
             return ((Aggregatable) this).viewAggDataQuery(config);
         } else {
             return "Not Support";
@@ -74,7 +90,7 @@ public abstract class DataProvider {
     public final String[] getDimVals(String columnName, AggConfig config, boolean reload) throws Exception {
         String[] dimVals = null;
         evalValueExpression(config);
-        if (this instanceof Aggregatable && doAggregationInDataSource()) {
+        if (isDataSourceAggInstance()) {
             dimVals = ((Aggregatable) this).queryDimVals(columnName, config);
         } else {
             checkAndLoad(reload);
@@ -87,9 +103,9 @@ public abstract class DataProvider {
                 .sorted(new NaturalOrderComparator()).limit(1000).toArray(String[]::new);
     }
 
-    public final String[] getColumn(boolean reload) throws Exception {
+    public final String[] invokeGetColumn(boolean reload) throws Exception {
         String[] columns = null;
-        if (this instanceof Aggregatable && doAggregationInDataSource()) {
+        if (isDataSourceAggInstance()) {
             columns = ((Aggregatable) this).getColumn();
         } else {
             checkAndLoad(reload);
@@ -98,59 +114,15 @@ public abstract class DataProvider {
         Arrays.sort(columns);
         return columns;
     }
-    
-    //获取注入条件
-    public final InjectionParam[] getInjectionParams(boolean reload) throws Exception {
-    	List<InjectionParam> params = new ArrayList<InjectionParam>();
-    	String sql = this.query.get("sql");
-    	String[] injectionParamsExpressions = this.query.get("sql").split("##");
-    	List<String> columns = Arrays.asList(getColumn(reload));
-    	    	
-    	if(injectionParamsExpressions.length > 1) {
-
-    		for(int idx = 1; idx < injectionParamsExpressions.length; idx++) {
-    			String expression = injectionParamsExpressions[idx];
-    			if(expression.contains(":")) {
-	    			String[] items = expression.split(":");
-	    			if(items.length > 2) {
-						if(!items[1].isEmpty()) {
-							if(columns.contains(items[2])) {
-								boolean isExist = false;
-								for(InjectionParam param : params) {
-									if(param.getParamName().equals(items[0])){
-										isExist = true;
-									}
-								}
-								
-								if(!isExist)
-									params.add(new InjectionParam(items[0], items[1], items[2]));
-							}
-						}
-	    			} else {
-	    				boolean isExist = false;
-						for(InjectionParam param : params) {
-							if(param.getParamName().equals(items[0])){
-								isExist = true;
-							}
-						}
-						
-						if(!isExist)
-							params.add(new InjectionParam(items[0], items[1], ""));
-	    			}
-    			}
-    		}
-    	}
-    	
-    	InjectionParam[] result = new InjectionParam[params.size()];
-    	return params.toArray(result);
-    }
 
     private void checkAndLoad(boolean reload) throws Exception {
-        String key = getLockKey(dataSource, query);
+        String key = getLockKey();
         synchronized (key.intern()) {
             if (reload || !innerAggregator.checkExist()) {
                 String[][] data = getData();
-                innerAggregator.loadData(data, interval);
+                if (data != null) {
+                    innerAggregator.loadData(data, interval);
+                }
                 logger.info("loadData {}", key);
             }
         }
@@ -168,7 +140,7 @@ public abstract class DataProvider {
     private void evaluator(ConfigComponent e) {
         if (e instanceof DimensionConfig) {
             DimensionConfig dc = (DimensionConfig) e;
-            dc.setValues(dc.getValues().stream().map(v -> getFilterValue(v)).collect(Collectors.toList()));
+            dc.setValues(dc.getValues().stream().flatMap(v -> getFilterValue(v)).collect(Collectors.toList()));
         }
         if (e instanceof CompositeConfig) {
             CompositeConfig cc = (CompositeConfig) e;
@@ -176,15 +148,27 @@ public abstract class DataProvider {
         }
     }
 
-    private String getFilterValue(String value) {
+    private Stream<String> getFilterValue(String value) {
+        List<String> list = new ArrayList<>();
         if (value == null || !(value.startsWith("{") && value.endsWith("}"))) {
-            return value;
+            list.add(value);
+        } else if ("{loginName}".equals(value)) {
+            list.add(authenticationService.getCurrentUser().getUsername());
+        } else if ("{userName}".equals(value)) {
+            list.add(authenticationService.getCurrentUser().getName());
+        } else if ("{userRoles}".equals(value)) {
+            List<DashboardRole> roles = roleService.getCurrentRoleList();
+            roles.forEach(role -> list.add(role.getRoleName()));
+        } else {
+            list.add(AviatorEvaluator.compile(value.substring(1, value.length() - 1), true).execute().toString());
         }
-        return AviatorEvaluator.compile(value.substring(1, value.length() - 1), true).execute().toString();
+        return list.stream();
     }
 
-    private String getLockKey(Map<String, String> dataSource, Map<String, String> query) {
-        return Hashing.md5().newHasher().putString(JSONObject.toJSON(dataSource).toString() + JSONObject.toJSON(query).toString(), Charsets.UTF_8).hash().toString();
+    public String getLockKey() {
+        String dataSourceStr = JSONObject.toJSON(dataSource).toString();
+        String queryStr = JSONObject.toJSON(query).toString();
+        return Hashing.md5().newHasher().putString(dataSourceStr + queryStr, Charsets.UTF_8).hash().toString();
     }
 
     public List<DimensionConfig> filterCCList2DCList(List<ConfigComponent> filters) {
@@ -211,16 +195,16 @@ public abstract class DataProvider {
 
     abstract public String[][] getData() throws Exception;
 
+    public void test() throws Exception {
+        getData();
+    }
+
     public void setDataSource(Map<String, String> dataSource) {
         this.dataSource = dataSource;
     }
 
     public void setQuery(Map<String, String> query) {
         this.query = query;
-    }
-    
-    public Map<String, String> getQuery(){
-    	return this.query;
     }
 
     public void setResultLimit(int resultLimit) {
@@ -235,10 +219,22 @@ public abstract class DataProvider {
         this.interval = interval;
     }
 
+    public InnerAggregator getInnerAggregator() {
+        return innerAggregator;
+    }
+
     public void setInnerAggregator(InnerAggregator innerAggregator) {
         this.innerAggregator = innerAggregator;
     }
-    
+
+    public boolean isUsedForTest() {
+        return isUsedForTest;
+    }
+
+    public void setUsedForTest(boolean usedForTest) {
+        isUsedForTest = usedForTest;
+    }
+
     public static ConfigComponent separateNull(ConfigComponent configComponent) {
         if (configComponent instanceof DimensionConfig) {
             DimensionConfig cc = (DimensionConfig) configComponent;
